@@ -1,0 +1,22 @@
+{{template "base" .}}
+
+{{define "content"}}
+    <div class="container">
+        <div class="row">
+            <div class="col">
+                
+                <h1>Pagina AboutT</h1>
+                <p>Lorem ipsum dolor sit, amet consectetur adipisicing elit. Voluptatem, vel.</p>
+                <p>Aqui se reflejan los datos {{index .StringMap "test"}} </p>
+
+                <p>{{if ne (index .StringMap "remote_ip") ""}}
+                        Tu direccion ip es {{index .StringMap "remote_ip"}}
+                    {{else}}
+                        No se obtubo tu Direccion IP. Visita <a href="/">Home Page</a> para poder encontrarla.
+                    {{end}}
+                </p>
+
+            </div>
+        </div>
+    </div>
+{{end}}

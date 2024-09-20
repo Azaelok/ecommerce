@@ -6,9 +6,9 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/Azaelok/ecommerce/pkg/config"
-	"github.com/Azaelok/ecommerce/pkg/handlers"
-	"github.com/Azaelok/ecommerce/pkg/render"
+	"github.com/Azaelok/ecommerce/internal/config"
+	"github.com/Azaelok/ecommerce/internal/handlers"
+	"github.com/Azaelok/ecommerce/internal/render"
 	"github.com/alexedwards/scs/v2"
 )
 

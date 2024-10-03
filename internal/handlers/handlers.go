@@ -7,6 +7,7 @@ import (
 	"net/http"
 
 	"github.com/Azaelok/ecommerce/internal/config"
+	"github.com/Azaelok/ecommerce/internal/forms"
 	"github.com/Azaelok/ecommerce/internal/models"
 	"github.com/Azaelok/ecommerce/internal/render"
 )
@@ -54,25 +55,19 @@ func (m *Reposository) About(w http.ResponseWriter, r *http.Request) {
 // Pagina Generals
 func (m *Reposository) Generals(w http.ResponseWriter, r *http.Request) {
 
-	render.RenderTemplate(w, r, "generals.page.tmpl", &models.TemplateData{
-		//		StringMap: stringMap,
-	})
+	render.RenderTemplate(w, r, "generals.page.tmpl", &models.TemplateData{})
 }
 
 // Pagina Majors
 func (m *Reposository) Majors(w http.ResponseWriter, r *http.Request) {
 
-	render.RenderTemplate(w, r, "majors.page.tmpl", &models.TemplateData{
-		//		StringMap: stringMap,
-	})
+	render.RenderTemplate(w, r, "majors.page.tmpl", &models.TemplateData{})
 }
 
 // Pagina Search
 func (m *Reposository) Search(w http.ResponseWriter, r *http.Request) {
 
-	render.RenderTemplate(w, r, "search-availability.page.tmpl", &models.TemplateData{
-		//		StringMap: stringMap,
-	})
+	render.RenderTemplate(w, r, "search-availability.page.tmpl", &models.TemplateData{})
 }
 
 func (m *Reposository) PostSearch(w http.ResponseWriter, r *http.Request) {
@@ -109,15 +104,53 @@ func (m *Reposository) AvailabilityJson(w http.ResponseWriter, r *http.Request) 
 // Pagina Contact
 func (m *Reposository) Contact(w http.ResponseWriter, r *http.Request) {
 
-	render.RenderTemplate(w, r, "contact.page.tmpl", &models.TemplateData{
-		//		StringMap: stringMap,
-	})
+	render.RenderTemplate(w, r, "contact.page.tmpl", &models.TemplateData{})
 }
 
 // Pagina Make-reservation
 func (m *Reposository) Make(w http.ResponseWriter, r *http.Request) {
 
+	var emptyReservation models.Reservation
+	data := make(map[string]interface{})
+	data["reservation"] = emptyReservation
+
 	render.RenderTemplate(w, r, "make-reservation.page.tmpl", &models.TemplateData{
-		//		StringMap: stringMap,
+		Form: forms.New(nil),
+		Data: data,
 	})
+}
+
+// Pagina Make-reservation
+func (m *Reposository) PostMake(w http.ResponseWriter, r *http.Request) {
+
+	err := r.ParseForm()
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+	reservation := models.Reservation{
+		FirstName: r.Form.Get("first_name"),
+		LastName:  r.Form.Get("last_name"),
+		Email:     r.Form.Get("email"),
+		Phone:     r.Form.Get("phone"),
+	}
+
+	form := forms.New(r.PostForm)
+
+	form.Required("first_name", "last_name", "email")
+	form.MinLength("first_name", 3, r)
+	form.IsEmail("email")
+
+	if !form.Valid() {
+		data := make(map[string]interface{})
+		data["reservation"] = reservation
+
+		render.RenderTemplate(w, r, "make-reservation.page.tmpl", &models.TemplateData{
+			Form: form,
+			Data: data,
+		})
+		return
+	}
+
 }

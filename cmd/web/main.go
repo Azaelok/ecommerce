@@ -20,6 +20,24 @@ var session *scs.SessionManager
 
 func main() {
 
+	err := run()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	fmt.Println(fmt.Sprintf("Start application on port #{portNumber}"))
+
+	srv := http.Server{
+		Addr:    portNumber,
+		Handler: routes(&app),
+	}
+
+	err = srv.ListenAndServe()
+	log.Fatal(err)
+}
+
+func run() error {
+
 	// Cambiar a true cuando este en produccion
 	app.InProduction = false
 
@@ -34,6 +52,7 @@ func main() {
 	tc, err := render.CreateTemplateCache()
 	if err != nil {
 		log.Fatal("No se puede crear la plantilla en cache")
+		return err
 	}
 
 	app.TemplateCache = tc
@@ -41,16 +60,7 @@ func main() {
 
 	repo := handlers.NewRepo(&app)
 	handlers.NewHandlers(repo)
-
 	render.NewTemplates(&app)
 
-	fmt.Println(fmt.Sprintf("Start application on port %s", portNumber))
-
-	srv := http.Server{
-		Addr:    portNumber,
-		Handler: routes(&app),
-	}
-
-	err = srv.ListenAndServe()
-	log.Fatal(err)
+	return nil
 }

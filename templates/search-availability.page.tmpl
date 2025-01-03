@@ -8,7 +8,7 @@
             <div class="col-md-6">
                 <h1 class="text-center mt-5">Disponibilidad de habitación.</h1>
 
-                  <form action="/search" method="post" novalidate class="needs-validation">
+                  <form action="/search-availability" method="post" novalidate class="needs-validation">
 
                     <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
 
@@ -47,7 +47,8 @@
 <script>
   const elem = document.getElementById('reservation-dates');
   const rangepicker = new DateRangePicker(elem, {
-  format: "dd/mm/yyyy"
+  format: "yyyy-mm-dd",
+  minDate: new Date(),
   });
 </script>
 {{end}}

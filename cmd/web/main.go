@@ -1,13 +1,18 @@
 package main
 
 import (
+	"encoding/gob"
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/Azaelok/ecommerce/internal/config"
+	"github.com/Azaelok/ecommerce/internal/driver"
 	"github.com/Azaelok/ecommerce/internal/handlers"
+	"github.com/Azaelok/ecommerce/internal/helpers"
+	"github.com/Azaelok/ecommerce/internal/models"
 	"github.com/Azaelok/ecommerce/internal/render"
 	"github.com/alexedwards/scs/v2"
 )
@@ -17,15 +22,18 @@ const portNumber = ":8080"
 
 var app config.AppConfig
 var session *scs.SessionManager
+var infoLog *log.Logger
+var errorLog *log.Logger
 
 func main() {
 
-	err := run()
+	db, err := run()
 	if err != nil {
 		log.Fatal(err)
 	}
+	defer db.SQL.Close()
 
-	fmt.Println(fmt.Sprintf("Start application on port #{portNumber}"))
+	fmt.Println(fmt.Sprintf("Start application on port %s", portNumber))
 
 	srv := http.Server{
 		Addr:    portNumber,
@@ -36,10 +44,22 @@ func main() {
 	log.Fatal(err)
 }
 
-func run() error {
+func run() (*driver.DB, error) {
+
+	gob.Register(models.User{})
+	gob.Register(models.Room{})
+	gob.Register(models.Restriction{})
+	gob.Register(models.Reservation{})
+	//gob.Register(models.RoomRestriction{})
 
 	// Cambiar a true cuando este en produccion
 	app.InProduction = false
+
+	infoLog = log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime)
+	app.InfoLog = infoLog
+
+	errorLog = log.New(os.Stdout, "ERROR\t", log.Ldate|log.Ltime|log.Lshortfile)
+	app.ErrorLog = errorLog
 
 	session = scs.New()
 	session.Lifetime = 24 * time.Hour
@@ -49,18 +69,27 @@ func run() error {
 
 	app.Session = session
 
+	log.Println("Connecting to database...")
+	//Datos de conexion a la BD
+	db, err := driver.ConnectSQL("host=localhost port=5433 dbname=postgres user=postgres password=root$2024 sslmode=disable")
+	if err != nil {
+		log.Fatal("Cannot connect to database Dying...")
+	}
+	log.Println("Connected to database...")
+
 	tc, err := render.CreateTemplateCache()
 	if err != nil {
 		log.Fatal("No se puede crear la plantilla en cache")
-		return err
+		return nil, err
 	}
 
 	app.TemplateCache = tc
 	app.UseCache = false
 
-	repo := handlers.NewRepo(&app)
+	repo := handlers.NewRepo(&app, db)
 	handlers.NewHandlers(repo)
-	render.NewTemplates(&app)
+	render.NewRenderer(&app)
+	helpers.NewHelpers(&app)
 
-	return nil
+	return db, nil
 }
